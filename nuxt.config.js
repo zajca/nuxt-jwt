@@ -24,8 +24,7 @@ module.exports = {
 	},
 	env: {
 		baseUrl: process.env.BASE_URL,
-		authApiUrl: process.env.AUTH_API_URL
-		// authApiUrl: process.env.BASE_URL || 'http://auth.jobhub.localdev/'
+		backendUrl: process.env.JH_API_URL
 	},
 	plugins: [
 		'~/plugins/vuetify.js',

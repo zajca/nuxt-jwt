@@ -1,6 +1,6 @@
 import jwtDecode from 'jwt-decode';
 
-const AUTH_API_URL = process.env.authApiUrl;
+const API_URL = process.env.backendUrl;
 
 export const JWT_KEY = 'jwt';
 export const NAMESPACE = 'auth'
@@ -46,13 +46,6 @@ export const actions = {
                 password: username
             })
             commit(MUTATIONS.SET_USER, response.token)
-            await this.$axios.$get(`${AUTH_API_URL}/api/test`)
-            try {
-                await this.$axios.$get(`${AUTH_API_URL}/api/test-admin`)
-            } catch (e) {
-
-            }
-            await this.$axios.$get(`/api/test`)
         } catch (e) {
             console.error(e)
             commit(MUTATIONS.RESET_USER)

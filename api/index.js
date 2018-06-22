@@ -3,7 +3,6 @@ import axios from 'axios'
 import {JWT_KEY} from '../store/auth.js'
 
 const config = require('../nuxt.config.js')
-
 // Create express router
 const router = express.Router()
 
@@ -22,8 +21,7 @@ router.use((req, res, next) => {
 router.post('/login', async (req, res) => {
   if (req.body.username && req.body.password) {
     try {
-      console.log(`${config.env.authApiUrl}/login_check`)
-      const response = await axios.post(`${config.env.authApiUrl}/login_check`, req.body)
+      const response = await axios.post(`${config.env.backendUrl}/login`, req.body)
       req.session[JWT_KEY] = response.data.token
       return res.json(response.data)
     } catch (e) {
