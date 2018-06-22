@@ -19,16 +19,14 @@ router.use((req, res, next) => {
 
 // Add POST - /api/login
 router.post('/login', async (req, res) => {
-  if (req.body.username && req.body.password) {
-    try {
-      const response = await axios.post(`${config.env.backendUrl}/login`, req.body)
-      req.session[JWT_KEY] = response.data.token
-      return res.json(response.data)
-    } catch (e) {
-      return res.status(401).json(e.response.data)
-    }
-  }
-  res.status(401).json({ message: 'Bad credentials' })
+	try {
+	  const response = await axios.post(`${config.env.backendUrl}/login`, req.body)
+	  req.session[JWT_KEY] = response.data.token
+	  return res.json(response.data)
+	} catch (e) {
+	  console.error(e.message)
+	  return res.status(401).json(e.response.data)
+	}
 })
 
 // Add POST - /api/logout
