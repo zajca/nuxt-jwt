@@ -21,24 +21,34 @@
       all: Boolean
     },
     data: () => ({
+      activeHeaders: [],
       pagination: {
         sort: {
           by: '',
           dir: DIR.NONE // 0 - none, 1-asc, 2-desc
         },
-        filters: []
+        filters: [],
       }
     }),
-    render (h, ctx) {
+    created() {
+      if (this.withSelect) {
+        this.activeHeaders.push(false);
+      }
+      this.headers.forEach((h, i) => (this.activeHeaders.push(false)))
+    },
+    render(h, ctx) {
       return h('tr', {}, [this.createCells()])
     },
     methods: {
-      createCells () {
+      createCells() {
         let headersComponents = []
         if (this.withSelect) {
           headersComponents.push(this.$createElement('th', {}, [this.$createElement(VCheckbox, {}, [])]))
         }
         for (let [index, header] of this.headers.entries()) {
+          if (this.withSelect) {
+            index++
+          }
           const data = {
             staticClass: 'column',
             class: {},
@@ -79,14 +89,16 @@
               this.$createElement(VIcon, { staticClass: 'filter' }, ['filter_list'])
             )
             content.push(this.createMenu(index, header))
-            data.on.click = this.openHeaderMenu(index)
+            data.on.click = (e) => {
+              this.openHeaderMenu(index, e)
+            }
           }
           headersComponents.push(this.$createElement('th', data, content))
         }
 
         return headersComponents
       },
-      createMenu (index, header) {
+      createMenu(index, header) {
         let content = []
 
         if (header.sortable) {
@@ -96,82 +108,90 @@
           }
         }
         content.push(...this.createInMenuFilterItems(header))
-
         return this.$createElement(VMenu,
           {
             ref: `headerMenu${index}`,
+            domProps: {},
             props: {
-              'offset-y': true,
-              'full-width': true,
-              'min-width': '300px',
-              attach: `header${index}`
+              closeOnContentClick: false,
+              offsetY: true,
+              fullWidth: true,
+              minWidth: '300px',
+              attach: `header${index}`,
+              value: this.activeHeaders[index]
+            },
+            on: {
+              input: (event) => {
+                this.activeHeaders[index] = false
+                this.$forceUpdate()
+              }
             }
           },
           [
             this.$createElement(VCard, {}, [this.$createElement(VList, {}, content)])
           ])
       },
-      createInMenuSortItems (header) {
+      createInMenuSortItems(header) {
         let children = []
 
         children.push(this.$createElement(VListTile, {
-          class: {
-            'active-list-tile': header.value === this.pagination.sort.by && this.pagination.sort.dir === DIR.ASC
-          },
-          on: {
-            click: () => {
-              this.sortBy(header, DIR.ASC)
-            }
-          }
-        }, [
-          this.$createElement(VListTileAvatar, {}, [
-            this.$createElement(VIcon, {}, ['arrow_downward'])
-          ]),
-          this.$createElement(VListTileTitle, {}, [
-            'Sort desc'
-          ])
-        ])
-        )
-        children.push(this.$createElement(VListTile, {
-          class: {
-            'active-list-tile': header.value === this.pagination.sort.by && this.pagination.sort.dir === DIR.DESC
-          },
-          on: {
-            click: () => {
-              this.sortBy(header, DIR.DESC)
-            }
-          }
-        }, [
-          this.$createElement(VListTileAvatar, {}, [
-            this.$createElement(VIcon, {}, ['arrow_upward'])
-          ]),
-          this.$createElement(VListTileTitle, {}, [
-            'Sort asc'
-          ])
-        ])
-        )
-
-        if (header.value === this.pagination.sort.by && this.pagination.sort.dir !== DIR.NONE) {
-          children.push(this.$createElement(VListTile, {
+            class: {
+              'active-list-tile': header.value === this.pagination.sort.by && this.pagination.sort.dir === DIR.ASC
+            },
             on: {
               click: () => {
-                this.sortBy(header, DIR.NONE)
+                this.sortBy(header, DIR.ASC)
               }
             }
           }, [
             this.$createElement(VListTileAvatar, {}, [
-              this.$createElement(VIcon, {}, ['close'])
+              this.$createElement(VIcon, {}, ['arrow_downward'])
             ]),
             this.$createElement(VListTileTitle, {}, [
-              'Cancel sort'
+              'Sort desc'
             ])
           ])
+        )
+        children.push(this.$createElement(VListTile, {
+            class: {
+              'active-list-tile': header.value === this.pagination.sort.by && this.pagination.sort.dir === DIR.DESC
+            },
+            on: {
+              click: () => {
+                this.sortBy(header, DIR.DESC)
+              }
+            }
+          }, [
+            this.$createElement(VListTileAvatar, {}, [
+              this.$createElement(VIcon, {}, ['arrow_upward'])
+            ]),
+            this.$createElement(VListTileTitle, {}, [
+              'Sort asc'
+            ])
+          ])
+        )
+
+        if (header.value === this.pagination.sort.by && this.pagination.sort.dir !== DIR.NONE) {
+          children.push(this.$createElement(VListTile, {
+              on: {
+                click: () => {
+                  this.sortBy(header, DIR.NONE)
+                }
+              }
+            }, [
+              this.$createElement(VListTileAvatar, {}, [
+                this.$createElement(VIcon, {}, ['close'])
+              ]),
+              this.$createElement(VListTileTitle, {}, [
+                'Cancel sort'
+              ])
+            ])
           )
         }
 
         return [children]
       },
-      createInMenuFilterItems (header) {
+      createInMenuFilterItems(header) {
         let children = [
           this.$createElement(VSubheader, 'Filter'),
           this.$createElement(VListTile, {}, [
@@ -203,7 +223,7 @@
         }
         return children
       },
-      isFilterActive (header) {
+      isFilterActive(header) {
         for (let filter of this.pagination.filters) {
           if (filter.by === header.value) {
             return true
@@ -211,7 +231,7 @@
         }
         return false
       },
-      cancelFilter (header) {
+      cancelFilter(header) {
         for (let [index, filter] of this.pagination.filters.entries()) {
           if (filter.by === header.value) {
             this.pagination.filters.splice(index, 1)
@@ -220,7 +240,7 @@
           }
         }
       },
-      onFilterValueChange (header) {
+      onFilterValueChange(header) {
         return (value) => {
           for (let filter of this.pagination.filters) {
             if (filter.by === header.value) {
@@ -234,12 +254,15 @@
           this.notifyChange()
         }
       },
-      openHeaderMenu (index) {
-        return () => {
-          this.$refs[`headerMenu${index}`].activate()
-        }
+      openHeaderMenu(index, e) {
+        e.preventDefault()
+        this.activeHeaders[index] = false
+        this.$nextTick(() => {
+          this.activeHeaders[index] = true
+          this.$forceUpdate()
+        })
       },
-      sortBy (header, dir) {
+      sortBy(header, dir) {
         this.pagination.sort.by = header.value
         if (dir !== undefined) {
           this.pagination.sort.dir = dir
@@ -249,7 +272,7 @@
         }
         this.notifyChange()
       },
-      notifyChange () {
+      notifyChange() {
         this.$emit('change', this.pagination)
         this.$emit('input', this.pagination)
       }
@@ -283,8 +306,10 @@
         &.active-sort
           i.sort
             opacity: 1
+
   .active-list-tile
     color: blue
+
   .hidden
     display: none !important
 </style>
