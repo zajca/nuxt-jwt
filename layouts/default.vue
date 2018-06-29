@@ -55,7 +55,8 @@
 				items: [
 					{ icon: 'apps', title: 'Homepage', to: '/' },
 					{ icon: 'apps', title: 'Podstránka', to: '/podstranka' },
-					{ icon: 'apps', title: 'Admin', to: '/admin' }
+					{ icon: 'apps', title: 'Admin', to: '/admin' },
+					{ icon: 'apps', title: 'Seznam', to: '/admin/seznam' }
 				],
 				title: 'BASE APP',
 			}
